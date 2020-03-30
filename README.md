@@ -29,5 +29,9 @@ for file in *.jpg
         let a=a+1
     done
 ```
+Then each continuous batch of images was rendered as a movie:
+```
+ffmpeg -f image2 -s 1000x750 -i output-%04d.JPG -vcodec libx264 -crf 25 -pix_fmt yuv420p batch1.mp4
+```
 
 - (4) A video-stabilization tool was used to identify reference points and transform these images into smooth time lapse videos. This was achieved using `Vid.stab` plugged-in with `ffmpeg`. This step was required as the library of raw images, when stitched together, came out unstable and shaky due to being captured by drone imagery. `Vid.stab` targets control points from the images to help create a smoother, more stabilized movie. The transformations that must occur to stabilize the video are detected and then applied to produce a stabilized output video file.
