@@ -34,4 +34,12 @@ Then each continuous batch of images was rendered as a movie:
 ffmpeg -f image2 -s 1000x750 -i output-%04d.JPG -vcodec libx264 -crf 25 -pix_fmt yuv420p batch1.mp4
 ```
 
-- (4) A video-stabilization tool was used to identify reference points and transform these images into smooth time lapse videos. This was achieved using `Vid.stab` plugged-in with `ffmpeg`. This step was required as the library of raw images, when stitched together, came out unstable and shaky due to being captured by drone imagery. `Vid.stab` targets control points from the images to help create a smoother, more stabilized movie. The transformations that must occur to stabilize the video are detected and then applied to produce a stabilized output video file.
+- (4) A video-stabilization tool was used to identify reference points and transform these images into smooth time lapse videos. This was achieved using `Vid.stab` plugged-in with `ffmpeg`. This step was required as the library of raw images, when stitched together, came out unstable and shaky due to being captured by drone imagery. `Vid.stab` targets control points from the images to help create a smoother, more stabilized movie. To produce a stabilized output video file, the code below identifies the transformations that must occur to stabilize the video, and applies them with the second command:
+```
+ffmpeg -i batch1.mp4 -vf vidstabdetect -f null -
+ffmpeg -i batch1.mp4 -vf vidstabtransform=smoothing=5:input="transforms.trf" batch1-stabilized.mp4
+```
+A side-by-side comparison of the original and stabilized videos can be created with this command (found on a forum [here](http://ffmpeg-users.933282.n4.nabble.com/Merge-two-videos-into-one-with-side-by-side-composition-td4659527.html)):
+```
+ffmpeg -i batch1.mp4 -i batch1-stabilized.mp4 -filter_complex "[0:v:0]pad=iw*2:ih[bg]; [bg][1:v:0]overlay=w" compare1.mp4
+```
