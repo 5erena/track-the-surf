@@ -7,10 +7,27 @@ Sequential images are resized, stitched together into video clips and stabilized
 ## Prepping the images
 Drone imagery collected during the SCOPE field experiment and georectified by Brouwer et al. 2015 make up the preliminary data for this project. Images were  compiled  in  the  chronological  order  they  were  captured  and  stitched together  into  a  movie  to  observe  the  dispersion  rates  and  patterns  of  the spill.  This was completed in a series of steps:
 
-- (1) Using `ffmpeg`, the images were stitched together into a movie to show the growth of the spill.  Because two UAVs were used, the resulting movie was discontinuous at the points when the drones were swapped out.  For this reason, the video was manually split into 5 batches of continuous footage.
+- (1) Using `ffmpeg`, the images were stitched together into a movie to show the growth of the spill using this command:  
+```
+ffmpeg -f image2 -s 1000x750 -i img-%04d.JPG -vcodec libx264 -crf 25 -pix_fmt yuv420p SCOPEraw.mp4
+```
+where `SCOPEraw.mp4` is the output movie file. Because two UAVs were used, the resulting movie was discontinuous at the points when the drones were swapped out.  For this reason, the video was manually split into 5 batches of continuous footage. 
 
-- (2) After reviewing and splitting the movie into batches, the file size of each image was decreased from 12MP (4000×3000 pixels) to 3MP (2000×1500pixels) in order to stabilize the videos in a shorter period of time. This process also reduces the size and time required to process the video data.
+- (2) After reviewing and splitting the movie into batches, the command below decreased the file size of each image from 12MP (4000×3000 pixels) to 3MP (2000×1500pixels) in order to stabilize the videos in a shorter period of time. This process also reduces the size and time required to process the video data with computer vision techniques, to follow.
+```
+ffmpeg -i img-%04d.JPG -vf scale=2000:1500 output-%04d.jpg
+```
 
-- (3) For each batch of images, `ffmpeg` was used to renumber the images beginning with `0001` before processing the images and rendering them as movies. A total of 5 continuous movies were generated,  each built from about 200 high-resolution sequential images. The file sizes of the generated mp4 movie files ranged from 7.3MB to 19.4MB.
+- (3) For each batch of images, `ffmpeg` was used to renumber the images beginning with *0001* before processing the images and rendering them as movies, as this is the default starting index for image processing with `ffmpeg`. A total of 6 continuous movies were generated,  each built from about 200 high-resolution sequential images. The file sizes of the generated mp4 movie files ranged from 7.3MB to 19.4MB. The following code runs through the images in a batch and renumbers them, so the images of each batch are numbered from *0001*:
+```
+#!/bin/bash
+a=1
+for file in *.jpg
+    do
+        new=$(printf "output-%04d.jpg" "$a")
+        mv -i -- "$file" "$new"
+        let a=a+1
+    done
+```
 
-- (4) (4) A video-stabilization tool was used to identify reference points and transform these images into smooth time lapse videos. This was achieved using `Vid.stab` plugged-in with `ffmpeg`. This step was required as the library of raw images, when stitched together, came out unstable and shaky due to being captured by drone imagery. `Vid.stab` targets control points from the images to help create a smoother, more stabilized movie. The transformations that must occur to stabilize the video are detected and then applied to produce a stabilized output video file.
+- (4) A video-stabilization tool was used to identify reference points and transform these images into smooth time lapse videos. This was achieved using `Vid.stab` plugged-in with `ffmpeg`. This step was required as the library of raw images, when stitched together, came out unstable and shaky due to being captured by drone imagery. `Vid.stab` targets control points from the images to help create a smoother, more stabilized movie. The transformations that must occur to stabilize the video are detected and then applied to produce a stabilized output video file.
