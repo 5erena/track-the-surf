@@ -11,14 +11,14 @@ Drone imagery collected during the [SCOPE](http://carthe.org/scope/) field exper
 ```
 ffmpeg -f image2 -s 1000x750 -i img-%04d.JPG -vcodec libx264 -crf 25 -pix_fmt yuv420p SCOPEraw.mp4
 ```
-where `SCOPEraw.mp4` is the output movie file. Because two UAVs were used, the resulting movie was discontinuous at the points when the drones were swapped out.  For this reason, the video was manually split into 5 batches of continuous footage. 
+where `SCOPEraw.mp4` is the output movie file. Because two UAVs were used, the resulting movie was discontinuous at the points when the drones were swapped out.  For this reason, the video was manually split into 6 batches of continuous footage. 
 
 - (2) After reviewing and splitting the movie into batches, the command below decreased the file size of each image from 12MP (4000×3000 pixels) to 3MP (2000×1500pixels) in order to stabilize the videos in a shorter period of time. This process also reduces the size and time required to process the video data with computer vision techniques, to follow.
 ```
 ffmpeg -i img-%04d.JPG -vf scale=2000:1500 output-%04d.jpg
 ```
 
-- (3) For each batch of images, `ffmpeg` was used to renumber the images beginning with *0001* before processing the images and rendering them as movies, as this is the default starting index for image processing with `ffmpeg`. A total of 6 continuous movies were generated,  each built from about 200 high-resolution sequential images. The file sizes of the generated mp4 movie files ranged from 7.3MB to 19.4MB. The following code runs through the images in a batch and renumbers them, so the images of each batch are numbered from *0001*:
+- (3) For each batch of images, `ffmpeg` was used to renumber the images beginning with *0001* before processing the images and rendering them as movies, as this is the default starting index for image processing with `ffmpeg`. A total of 6 continuous movies were generated,  each built from about 200 high-resolution sequential images. The file sizes of the generated *.mp4* movie files ranged from 7.3MB to 19.4MB. The following code runs through the images in a batch and renumbers them, so the images of each batch are numbered from *0001*:
 ```
 #!/bin/bash
 a=1
@@ -42,4 +42,26 @@ ffmpeg -i batch1.mp4 -vf vidstabtransform=smoothing=5:input="transforms.trf" bat
 A side-by-side comparison of the original and stabilized videos can be created with this command (found on a forum [here](http://ffmpeg-users.933282.n4.nabble.com/Merge-two-videos-into-one-with-side-by-side-composition-td4659527.html)):
 ```
 ffmpeg -i batch1.mp4 -i batch1-stabilized.mp4 -filter_complex "[0:v:0]pad=iw*2:ih[bg]; [bg][1:v:0]overlay=w" compare1.mp4
+```
+The following script stitches the batched films together into one video, joining all the *.mp4* files in the current folder into *joined-out.mp4*:
+```
+#!/bin/bash
+
+[ -e list.txt ] && rm list.txt
+for f in *.mp4
+do
+   echo "file $f" >> list.txt
+done
+
+ffmpeg -f concat -i list.txt -c copy joined-out.mp4 && rm list.txt
+```
+This script was run for both the stabilized and non-stabilized videos:
+```
+bash ./stitch-vids.sh
+```
+*Notes: `.` refers to the current directory, where the script was saved in this case. If the script is saved elsewhere, replace `.` with `/path/to/yourscript.sh` as seen [here](https://askubuntu.com/a/38670). `bash` was added in to give execute permission to the script.*
+
+Finally, a side-by-side comparison can be generated to view the full original and full stabilized videos:
+```
+ffmpeg -i joined-out.mp4 -i joined-out-stab.mp4 -filter_complex "[0:v:0]pad=iw*2:ih[bg]; [bg][1:v:0]overlay=w" compare-full.mp4
 ```
