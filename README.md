@@ -5,7 +5,7 @@ Tool for tracking blobs in the surfzone.
 Sequential images are resized, stitched together into video clips and stabilized. Computer vision techniques are then applied to the videos to track the blob progression over time. The goal is to provide inputs for a predictive machine learning model in the form of contours and density as pixels. All straight from the comfort of your terminal!
 
 ## Prepping the images
-Drone imagery collected during the SCOPE field experiment and georectified by Brouwer et al. 2015 make up the preliminary data for this project. Images were  compiled  in  the  chronological  order  they  were  captured  and  stitched together  into  a  movie  to  observe  the  dispersion  rates  and  patterns  of  the spill.  This was completed in a series of steps:
+Drone imagery collected during the [SCOPE](http://carthe.org/scope/) field experiment and georectified by [Brouwer et al. 2015](https://doi.org/10.1175/JTECH-D-14-00122.1) make up the preliminary data for this project. Images were  compiled  in  the  chronological  order  they  were  captured  and  stitched together  into  a  movie  to  observe  the  dispersion  rates  and  patterns  of  the spill.  This was completed in a series of steps:
 
 - (1) Using `ffmpeg`, the images were stitched together into a movie to show the growth of the spill using this command:  
 ```
