@@ -79,6 +79,7 @@ cv2.createTrackbar("S_MAX", "Trackbars", 255, 255, nothing)
 cv2.createTrackbar("V_MIN", "Trackbars", 165, 255, nothing)
 cv2.createTrackbar("V_MAX", "Trackbars", 255, 255, nothing)
 ```
+## Segment the image
 Once a satisfactory range was set for the mask, the dye plume was able to be segmented in a series of steps:
 ```
 # set range of HSV values
@@ -119,6 +120,7 @@ As an improvement, a region of interest (ROI) was incorporated to ignore any noi
     ret,b_mask = cv2.threshold(gray,127,255, 0) #----converted to binary
     fin = cv2.bitwise_and(b_mask,b_mask,mask = mask) #-----ROI mask
 ```
+## Contours
 After the spill is segmented, the contours at each frame may be ontained. The contours are valuable in order to quantify the development of the spill over time. The OpenCV findContours function was used to extract the contours of the spill in the binary image: 
 ```
     contours =  cv2.findContours(fin,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
