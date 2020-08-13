@@ -65,3 +65,73 @@ Finally, a side-by-side comparison can be generated to view the full original an
 ```
 ffmpeg -i joined-out.mp4 -i joined-out-stab.mp4 -filter_complex "[0:v:0]pad=iw*2:ih[bg]; [bg][1:v:0]overlay=w" compare-full.mp4
 ```
+## Filtering for a specific color range
+Images are described in an HSV color space to segment the spill from the background using the object's hue values. OpenCV's Trackbar function was used to find a suitable range of hue values. First, the trackbar window should be created:
+```
+cv2.namedWindow("Trackbars")
+```
+and then trackbar sliders were created for the minimum and maximum values for hue, saturation, and value:
+```
+cv2.createTrackbar("H_MIN", "Trackbars", 63, 180, nothing)
+cv2.createTrackbar("H_MAX", "Trackbars", 109, 180, nothing)
+cv2.createTrackbar("S_MIN", "Trackbars", 35, 255, nothing)
+cv2.createTrackbar("S_MAX", "Trackbars", 255, 255, nothing)
+cv2.createTrackbar("V_MIN", "Trackbars", 165, 255, nothing)
+cv2.createTrackbar("V_MAX", "Trackbars", 255, 255, nothing)
+```
+Once a satisfactory range was set for the mask, the dye plume was able to be segmented in a series of steps:
+```
+# set range of HSV values
+lowerBound = np.array([63, 20, 165])
+upperBound = np.array([109, 255, 255])
+
+# stream video file
+cam = cv2.VideoCapture("/Users/espeon/spyder3-py3/joined-out-stab.mp4")
+kernelOpen = np.ones((5, 5))
+kernelClose = np.ones((20, 20))
+
+# loop through frames
+while(cam.isOpened()):
+    ret, original = cam.read()
+    
+    # resize image
+    original = cv2.resize(original, (680,440))
+    
+    # invert image since reds wrap around 0 and 360
+    img = (255-original)
+    
+    # convert BGR to HSV and blur w.r.t. edges
+    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    blur = cv2.bilateralFilter(imgHSV,10,300,300)
+    
+    # create mask
+    mask = cv2.inRange(blur, lowerBound, upperBound)
+    maskOpen = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernelOpen)
+    maskClose = cv2.morphologyEx(maskOpen, cv2.MORPH_CLOSE, kernelClose)
+    maskFinal = maskClose
+```
+As an improvement, a region of interest (ROI) was incorporated to ignore any noise outside the spill, in particular some red tape affixed to the drone in the video frames. The new mask is then created:
+```
+    # ROI
+    black = np.zeros((img.shape[0], img.shape[1], 3), np.uint8) #---black in RGB
+    black1 = cv2.rectangle(black,(200,70),(500,350),(255, 255, 255), -1) #-----ROI
+    gray = cv2.cvtColor(black,cv2.COLOR_BGR2GRAY)
+    ret,b_mask = cv2.threshold(gray,127,255, 0) #----converted to binary
+    fin = cv2.bitwise_and(b_mask,b_mask,mask = mask) #-----ROI mask
+```
+After the spill is segmented, the contours at each frame may be ontained. The contours are valuable in order to quantify the development of the spill over time. The OpenCV findContours function was used to extract the contours of the spill in the binary image: 
+```
+    contours =  cv2.findContours(fin,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+```
+Then, the contours are drawn onto each video frame using the OpenCV function drawContours. 
+```
+# loop over the contours
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area>150: # ignore anomalies
+            cv2.drawContours(original, [c], -1, (0,255,0), 3)
+            
+    cv2.imshow("Mask", fin)
+    cv2.imshow("Spill with contours",original)
+```
+![Output](Output.png)
