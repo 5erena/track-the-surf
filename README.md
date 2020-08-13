@@ -2,7 +2,7 @@
 Tool for tracking blobs in the surfzone. 
 
 ## tl;dr
-Sequential images are resized, stitched together into video clips and stabilized. Computer vision techniques are then applied to the videos to track the blob progression over time. The goal is to provide inputs for a predictive machine learning model in the form of contours and density as pixels. All straight from the comfort of your terminal!
+Sequential images are resized, stitched together into video clips and stabilized. Computer vision techniques are then applied to the videos to track the blob progression over time. Properties of the blob may be extracted for use as input in a predictive machine learning model, including contour values and image pixel  density. 
 
 ## Prepping the images
 Drone imagery collected during the [SCOPE](http://carthe.org/scope/) field experiment and georectified by [Brouwer et al. 2015](https://doi.org/10.1175/JTECH-D-14-00122.1) make up the preliminary data for this project. Images were  compiled  in  the  chronological  order  they  were  captured  and  stitched together  into  a  movie  to  observe  the  dispersion  rates  and  patterns  of  the spill.  This was completed in a series of steps:
@@ -137,3 +137,5 @@ Then, the contours are drawn onto each video frame using the OpenCV function dra
     cv2.imshow("Spill with contours",original)
 ```
 ![Output](Output.png)
+
+Properties of the dye spill may be extracted simply now, such as pixel density, area, and the contour pixel values. This can be seen in the code, and was accomplished by appending areas, contour values, and pixels within the contours into previously initialized matrices at each step looping through the frames. 
