@@ -1,5 +1,5 @@
 # track-the-surf
-Tool for tracking blobs in the surfzone. 
+Tool for tracking blobs in the surfzone using computer vision. 
 
 ## tl;dr
 Sequential images are resized, stitched together into video clips and stabilized. Computer vision techniques are then applied to the videos to track the blob progression over time. Properties of the blob may be extracted for use as input in a predictive machine learning model, including contour values and image pixel  density. 
